@@ -1,302 +1,300 @@
 #include "MD5.h"
 
-MD5::MD5()
+const unsigned char MD5::_padding[] = {
+  0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  };
+
+MD5::MD5(void)
 {
-	//nothing
-	return;
+  init();
 }
 
-char* MD5::make_digest(const unsigned char *digest, int len) /* {{{ */
+MD5::MD5(size_t len)
 {
-	char * md5str = (char*) malloc(sizeof(char)*(len*2+1));
-	static const char hexits[17] = "0123456789abcdef";
-	int i;
-
-	for (i = 0; i < len; i++) {
-		md5str[i * 2]       = hexits[digest[i] >> 4];
-		md5str[(i * 2) + 1] = hexits[digest[i] &  0x0F];
-	}
-	md5str[len * 2] = '\0';
-	return md5str;
+  init();
+  this->_input_len = len;
+  this->_blocks = len >> 6;
 }
 
-/*
- * The basic MD5 functions.
- *
- * E and G are optimized compared to their RFC 1321 definitions for
- * architectures that lack an AND-NOT instruction, just like in Colin Plumb's
- * implementation.
- * E() has been used instead of F() because F() is already defined in the Arduino core
- */
-#define E(x, y, z)			((z) ^ ((x) & ((y) ^ (z))))
-#define G(x, y, z)			((y) ^ ((z) & ((x) ^ (y))))
-#define H(x, y, z)			((x) ^ (y) ^ (z))
-#define I(x, y, z)			((y) ^ ((x) | ~(z)))
-
-/*
- * The MD5 transformation for all four rounds.
- */
-#define STEP(f, a, b, c, d, x, t, s) \
-	(a) += f((b), (c), (d)) + (x) + (t); \
-	(a) = (((a) << (s)) | (((a) & 0xffffffff) >> (32 - (s)))); \
-	(a) += (b);
-
-/*
- * SET reads 4 input bytes in little-endian byte order and stores them
- * in a properly aligned word in host byte order.
- *
- * The check for little-endian architectures that tolerate unaligned
- * memory accesses is just an optimization.  Nothing will break if it
- * doesn't work.
- */
-#if defined(__i386__) || defined(__x86_64__) || defined(__vax__)
-# define SET(n) \
-	(*(MD5_u32plus *)&ptr[(n) * 4])
-# define GET(n) \
-	SET(n)
-#else
-# define SET(n) \
-	(ctx->block[(n)] = \
-	(MD5_u32plus)ptr[(n) * 4] | \
-	((MD5_u32plus)ptr[(n) * 4 + 1] << 8) | \
-	((MD5_u32plus)ptr[(n) * 4 + 2] << 16) | \
-	((MD5_u32plus)ptr[(n) * 4 + 3] << 24))
-# define GET(n) \
-	(ctx->block[(n)])
-#endif
-
-/*
- * This processes one or more 64-byte data blocks, but does NOT update
- * the bit counters.  There are no alignment requirements.
- */
-const void *MD5::body(void *ctxBuf, const void *data, size_t size)
+MD5::~MD5(void)
 {
-	MD5_CTX *ctx = (MD5_CTX*)ctxBuf;
-	const unsigned char *ptr;
-	MD5_u32plus a, b, c, d;
-	MD5_u32plus saved_a, saved_b, saved_c, saved_d;
+  init();
+}
 
-	ptr = (unsigned char*)data;
+void MD5::init(void)
+{
+  this->_a = MD5::_A;
+  this->_b = MD5::_B;
+  this->_c = MD5::_C;
+  this->_d = MD5::_D;
+  memset(this->_buffer, '\0', BUFFER_LEN);
+  this->_input_len = 0;
+  this->_bits = 0;
+  this->_blocks = 0;
+}
 
-	a = ctx->a;
-	b = ctx->b;
-	c = ctx->c;
-	d = ctx->d;
+void MD5::make_digest(const unsigned char *hash, char *digest)
+{
+  char *p = digest;
+  for(int i = 0; i < HASH_LEN; i++)
+  {
+    snprintf(p, 3, "%02x", hash[i]);
+    p += 2;
+  }
+}
 
-	do {
-		saved_a = a;
-		saved_b = b;
-		saved_c = c;
-		saved_d = d;
+/* Processes 64 byte blocks for the MD5 transforms.
+ * Set the MD5 class member _blocks to the number of full blocks */
+const char * MD5::transform(const char *data)
+{
+  MD5_u32 a, b, c, d;
+  MD5_u32 saved_a, saved_b, saved_c, saved_d;
 
-/* Round 1
- * E() has been used instead of F() because F() is already defined in the Arduino core
- */
-		STEP(E, a, b, c, d, SET(0), 0xd76aa478, 7)
-		STEP(E, d, a, b, c, SET(1), 0xe8c7b756, 12)
-		STEP(E, c, d, a, b, SET(2), 0x242070db, 17)
-		STEP(E, b, c, d, a, SET(3), 0xc1bdceee, 22)
-		STEP(E, a, b, c, d, SET(4), 0xf57c0faf, 7)
-		STEP(E, d, a, b, c, SET(5), 0x4787c62a, 12)
-		STEP(E, c, d, a, b, SET(6), 0xa8304613, 17)
-		STEP(E, b, c, d, a, SET(7), 0xfd469501, 22)
-		STEP(E, a, b, c, d, SET(8), 0x698098d8, 7)
-		STEP(E, d, a, b, c, SET(9), 0x8b44f7af, 12)
-		STEP(E, c, d, a, b, SET(10), 0xffff5bb1, 17)
-		STEP(E, b, c, d, a, SET(11), 0x895cd7be, 22)
-		STEP(E, a, b, c, d, SET(12), 0x6b901122, 7)
-		STEP(E, d, a, b, c, SET(13), 0xfd987193, 12)
-		STEP(E, c, d, a, b, SET(14), 0xa679438e, 17)
-		STEP(E, b, c, d, a, SET(15), 0x49b40821, 22)
+  a = this->_a;
+  b = this->_b;
+  c = this->_c;
+  d = this->_d;
+
+  do {
+    saved_a = a;
+    saved_b = b;
+    saved_c = c;
+    saved_d = d;
+
+/* Round 1 */
+    step(_F(b, c, d), a, b, data[0], 0xd76aa478, 7);   //1 [ABCD  0  7  1]
+    step(_F(a, b, c), d, a, data[1], 0xe8c7b756, 12);  //2 [DABC  1 12  2]
+    step(_F(d, a, b), c, d, data[2], 0x242070db, 17);  //3 [CDAB  2 17  3]
+    step(_F(c, d, a), b, c, data[3], 0xc1bdceee, 22);  //4 [BCDA  3 22  4]
+    step(_F(b, c, d), a, b, data[4], 0xf57c0faf, 7);   //5 [ABCD  4  7  5]
+    step(_F(a, b, c), d, a, data[5], 0x4787c62a, 12);  //6 [DABC  5 12  6]
+    step(_F(d, a, b), c, d, data[6], 0xa8304613, 17);  //7 [CDAB  6 17  7]
+    step(_F(c, d, a), b, c, data[7], 0xfd469501, 22);  //8 [BCDA  7 22  8]
+    step(_F(b, c, d), a, b, data[8], 0x698098d8, 7);   //9 [ABCD  8  7  9]
+    step(_F(a, b, c), d, a, data[9], 0x8b44f7af, 12);  //10 [DABC  9 12 10]
+    step(_F(d, a, b), c, d, data[10], 0xffff5bb1, 17); //11 [CDAB 10 17 11]
+    step(_F(c, d, a), b, c, data[11], 0x895cd7be, 22); //12 [BCDA 11 22 12]
+    step(_F(b, c, d), a, b, data[12], 0x6b901122, 7);  //13 [ABCD 12  7 13]
+    step(_F(a, b, c), d, a, data[13], 0xfd987193, 12); //14 [DABC 13 12 14]
+    step(_F(d, a, b), c, d, data[14], 0xa679438e, 17); //15 [CDAB 14 17 15]
+    step(_F(c, d, a), b, c, data[15], 0x49b40821, 22); //16 [BCDA 15 22 16]
 
 /* Round 2 */
-		STEP(G, a, b, c, d, GET(1), 0xf61e2562, 5)
-		STEP(G, d, a, b, c, GET(6), 0xc040b340, 9)
-		STEP(G, c, d, a, b, GET(11), 0x265e5a51, 14)
-		STEP(G, b, c, d, a, GET(0), 0xe9b6c7aa, 20)
-		STEP(G, a, b, c, d, GET(5), 0xd62f105d, 5)
-		STEP(G, d, a, b, c, GET(10), 0x02441453, 9)
-		STEP(G, c, d, a, b, GET(15), 0xd8a1e681, 14)
-		STEP(G, b, c, d, a, GET(4), 0xe7d3fbc8, 20)
-		STEP(G, a, b, c, d, GET(9), 0x21e1cde6, 5)
-		STEP(G, d, a, b, c, GET(14), 0xc33707d6, 9)
-		STEP(G, c, d, a, b, GET(3), 0xf4d50d87, 14)
-		STEP(G, b, c, d, a, GET(8), 0x455a14ed, 20)
-		STEP(G, a, b, c, d, GET(13), 0xa9e3e905, 5)
-		STEP(G, d, a, b, c, GET(2), 0xfcefa3f8, 9)
-		STEP(G, c, d, a, b, GET(7), 0x676f02d9, 14)
-		STEP(G, b, c, d, a, GET(12), 0x8d2a4c8a, 20)
+    step(_G(b, c, d), a, b, data[1], 0xf61e2562, 5);   //17 [ABCD  1  5 17]
+    step(_G(a, b, c), d, a, data[6], 0xc040b340, 9);   //18 [DABC  6  9 18]
+    step(_G(d, a, b), c, d, data[11], 0x265e5a51, 14); //19 [CDAB 11 14 19]
+    step(_G(c, d, a), b, c, data[0], 0xe9b6c7aa, 20);  //20 [BCDA  0 20 20]
+    step(_G(b, c, d), a, b, data[5], 0xd62f105d, 5);   //21 [ABCD  5  5 21]
+    step(_G(a, b, c), d, a, data[10], 0x02441453, 9);  //22 [DABC 10  9 22]
+    step(_G(d, a, b), c, d, data[15], 0xd8a1e681, 14); //23 [CDAB 15 14 23]
+    step(_G(c, d, a), b, c, data[4], 0xe7d3fbc8, 20);  //24 [BCDA  4 20 24]
+    step(_G(b, c, d), a, b, data[9], 0x21e1cde6, 5);   //25 [ABCD  9  5 25]
+    step(_G(a, b, c), d, a, data[14], 0xc33707d6, 9);  //26 [DABC 14  9 26]
+    step(_G(d, a, b), c, d, data[3], 0xf4d50d87, 14);  //27 [CDAB  3 14 27]
+    step(_G(c, d, a), b, c, data[8], 0x455a14ed, 20);  //28 [BCDA  8 20 28]
+    step(_G(b, c, d), a, b, data[13], 0xa9e3e905, 5);  //29 [ABCD 13  5 29]
+    step(_G(a, b, c), d, a, data[2], 0xfcefa3f8, 9);   //30 [DABC  2  9 30]
+    step(_G(d, a, b), c, d, data[7], 0x676f02d9, 14);  //31 [CDAB  7 14 31]
+    step(_G(c, d, a), b, c, data[12], 0x8d2a4c8a, 20); //32 [BCDA 12 20 32]
 
 /* Round 3 */
-		STEP(H, a, b, c, d, GET(5), 0xfffa3942, 4)
-		STEP(H, d, a, b, c, GET(8), 0x8771f681, 11)
-		STEP(H, c, d, a, b, GET(11), 0x6d9d6122, 16)
-		STEP(H, b, c, d, a, GET(14), 0xfde5380c, 23)
-		STEP(H, a, b, c, d, GET(1), 0xa4beea44, 4)
-		STEP(H, d, a, b, c, GET(4), 0x4bdecfa9, 11)
-		STEP(H, c, d, a, b, GET(7), 0xf6bb4b60, 16)
-		STEP(H, b, c, d, a, GET(10), 0xbebfbc70, 23)
-		STEP(H, a, b, c, d, GET(13), 0x289b7ec6, 4)
-		STEP(H, d, a, b, c, GET(0), 0xeaa127fa, 11)
-		STEP(H, c, d, a, b, GET(3), 0xd4ef3085, 16)
-		STEP(H, b, c, d, a, GET(6), 0x04881d05, 23)
-		STEP(H, a, b, c, d, GET(9), 0xd9d4d039, 4)
-		STEP(H, d, a, b, c, GET(12), 0xe6db99e5, 11)
-		STEP(H, c, d, a, b, GET(15), 0x1fa27cf8, 16)
-		STEP(H, b, c, d, a, GET(2), 0xc4ac5665, 23)
+    step(_H(b, c, d), a, b, data[5], 0xfffa3942, 4);   //33 [ABCD  5  4 33]
+    step(_H(a, b, c), d, a, data[8], 0x8771f681, 11);  //34 [DABC  8 11 34]
+    step(_H(d, a, b), c, d, data[11], 0x6d9d6122, 16); //35 [CDAB 11 16 35]
+    step(_H(c, d, a), b, c, data[14], 0xfde5380c, 23); //36 [BCDA 14 23 36]
+    step(_H(b, c, d), a, b, data[1], 0xa4beea44, 4);   //37 [ABCD  1  4 37]
+    step(_H(a, b, c), d, a, data[4], 0x4bdecfa9, 11);  //38 [DABC  4 11 38]
+    step(_H(d, a, b), c, d, data[7], 0xf6bb4b60, 16);  //39 [CDAB  7 16 39]
+    step(_H(c, d, a), b, c, data[10], 0xbebfbc70, 23); //40 [BCDA 10 23 40]
+    step(_H(b, c, d), a, b, data[13], 0x289b7ec6, 4);  //41 [ABCD 13  4 41]
+    step(_H(a, b, c), d, a, data[0], 0xeaa127fa, 11);  //42 [DABC  0 11 42]
+    step(_H(d, a, b), c, d, data[3], 0xd4ef3085, 16);  //43 [CDAB  3 16 43]
+    step(_H(c, d, a), b, c, data[6], 0x04881d05, 23);  //44 [BCDA  6 23 44]
+    step(_H(b, c, d), a, b, data[9], 0xd9d4d039, 4);   //45 [ABCD  9  4 45]
+    step(_H(a, b, c), d, a, data[12], 0xe6db99e5, 11); //46 [DABC 12 11 46]
+    step(_H(d, a, b), c, d, data[15], 0x1fa27cf8, 16); //47 [CDAB 15 16 47]
+    step(_H(c, d, a), b, c, data[2], 0xc4ac5665, 23);  //48 [BCDA  2 23 48]
 
 /* Round 4 */
-		STEP(I, a, b, c, d, GET(0), 0xf4292244, 6)
-		STEP(I, d, a, b, c, GET(7), 0x432aff97, 10)
-		STEP(I, c, d, a, b, GET(14), 0xab9423a7, 15)
-		STEP(I, b, c, d, a, GET(5), 0xfc93a039, 21)
-		STEP(I, a, b, c, d, GET(12), 0x655b59c3, 6)
-		STEP(I, d, a, b, c, GET(3), 0x8f0ccc92, 10)
-		STEP(I, c, d, a, b, GET(10), 0xffeff47d, 15)
-		STEP(I, b, c, d, a, GET(1), 0x85845dd1, 21)
-		STEP(I, a, b, c, d, GET(8), 0x6fa87e4f, 6)
-		STEP(I, d, a, b, c, GET(15), 0xfe2ce6e0, 10)
-		STEP(I, c, d, a, b, GET(6), 0xa3014314, 15)
-		STEP(I, b, c, d, a, GET(13), 0x4e0811a1, 21)
-		STEP(I, a, b, c, d, GET(4), 0xf7537e82, 6)
-		STEP(I, d, a, b, c, GET(11), 0xbd3af235, 10)
-		STEP(I, c, d, a, b, GET(2), 0x2ad7d2bb, 15)
-		STEP(I, b, c, d, a, GET(9), 0xeb86d391, 21)
+    step(_I(b, c, d), a, b, data[0], 0xf4292244, 6);   //49 [ABCD  0  6 49]
+    step(_I(a, b, c), d, a, data[7], 0x432aff97, 10);  //50 [DABC  7 10 50]
+    step(_I(d, a, b), c, d, data[14], 0xab9423a7, 15); //51 [CDAB 14 15 51]
+    step(_I(c, d, a), b, c, data[5], 0xfc93a039, 21);  //52 [BCDA  5 21 52]
+    step(_I(b, c, d), a, b, data[12], 0x655b59c3, 6);  //53 [ABCD 12  6 53]
+    step(_I(a, b, c), d, a, data[3], 0x8f0ccc92, 10);  //54 [DABC  3 10 54]
+    step(_I(d, a, b), c, d, data[10], 0xffeff47d, 15); //55 [CDAB 10 15 55]
+    step(_I(c, d, a), b, c, data[1], 0x85845dd1, 21);  //56 [BCDA  1 21 56]
+    step(_I(b, c, d), a, b, data[8], 0x6fa87e4f, 6);   //57 [ABCD  8  6 57]
+    step(_I(a, b, c), d, a, data[15], 0xfe2ce6e0, 10); //58 [DABC 15 10 58]
+    step(_I(d, a, b), c, d, data[6], 0xa3014314, 15);  //59 [CDAB  6 15 59]
+    step(_I(c, d, a), b, c, data[13], 0x4e0811a1, 21); //60 [BCDA 13 21 60]
+    step(_I(b, c, d), a, b, data[4], 0xf7537e82, 6);   //61 [ABCD  4  6 61]
+    step(_I(a, b, c), d, a, data[11], 0xbd3af235, 10); //62 [DABC 11 10 62]
+    step(_I(d, a, b), c, d, data[2], 0x2ad7d2bb, 15);  //63 [CDAB  2 15 63]
+    step(_I(c, d, a), b, c, data[9], 0xeb86d391, 21);  //64 [BCDA  9 21 64]
 
-		a += saved_a;
-		b += saved_b;
-		c += saved_c;
-		d += saved_d;
+    a += saved_a;
+    b += saved_b;
+    c += saved_c;
+    d += saved_d;
 
-		ptr += 64;
-	} while (size -= 64);
+    data += 64;
+    this->_blocks -= 1;
+    this->_bits += 512;
+  } while (this->_blocks > 0);
 
-	ctx->a = a;
-	ctx->b = b;
-	ctx->c = c;
-	ctx->d = d;
+  this->_a = a;
+  this->_b = b;
+  this->_c = c;
+  this->_d = d;
 
-	return ptr;
+  return data;
 }
 
-void MD5::MD5Init(void *ctxBuf)
+/* Transform remaining bits less than a full block with required padding and cummulates
+  * the context variables. If the MD5 class member _blocks is set to a value greater than
+  * 0, then transform() is called to process the full blocks. Set _blocks to zero when finishing
+  * up a transform with a partial block */
+void MD5::finalize(const char *data)
 {
-	MD5_CTX *ctx = (MD5_CTX*)ctxBuf;
-	ctx->a = 0x67452301;
-	ctx->b = 0xefcdab89;
-	ctx->c = 0x98badcfe;
-	ctx->d = 0x10325476;
+  // do we have one or more 64 byte blocks
+  if (this->_blocks > 0)
+  {
+      data = transform(data);
+  }
 
-	ctx->lo = 0;
-	ctx->hi = 0;
+  // remaining bytes
+  size_t bytes = this->_input_len - (this->_bits >> 3);
 
-    memset(ctx->block, 0, sizeof(ctx->block));
-    memset(ctx->buffer, 0, sizeof(ctx->buffer));
+  // Remaining bytes should be less than or equal to BUFFER_LEN if calling
+  // function properly set MD5 context variables _blocks, _bytes, and _input_len.
+  // If we are going to run into an overflow than null out context
+  // variables and return leaving a null hash.
+  if (bytes > BUFFER_LEN)
+  {
+    init();
+    this->_a = 0;
+    this->_b = 0;
+    this->_c = 0;
+    this->_d = 0;
+    return;
+  }
+
+  // calculate source bits now as this->_bits will be updated with transformed padding
+  size_t source_bits = this->_bits + (bytes << 3);
+
+/* There are three remaining cases:
+ * 1) transform ended on a block boundry (bits == 0) -> append 512 bits
+ * 2) transform ended between 448-512 bits -> append & transform then append 512 bits
+ * 3) transform ended below or equal to 448 -> append to 448 bits
+ */
+
+  // copy remaining bits to buffer
+  if(data != this->_buffer)
+  {
+    memcpy(this->_buffer, data, bytes);
+  }
+
+  // case 2 add padding bits to 512, transform, and zero buffer
+  if (bytes > SOURCE_SIZE_INDEX)
+  {
+    memcpy(this->_buffer + bytes, MD5::_padding, BUFFER_LEN - bytes);
+    this->_blocks = 1;
+    transform(this->_buffer);
+    memset(this->_buffer, '\0', BUFFER_LEN);
+  }
+  else
+  {
+  // add padding bits to 448
+    memcpy(this->_buffer + bytes, MD5::_padding, SOURCE_SIZE_INDEX - bytes);
+  }
+
+  // append length in bits (64 bit representation low order byte first) and transform
+  this->_buffer[56] = source_bits & 0xff;
+  this->_buffer[57] = (source_bits >> 8) & 0xff;
+  this->_buffer[58] = (source_bits >> 16) & 0xff;
+  this->_buffer[59] = (source_bits >> 24) & 0xff;
+  this->_buffer[60] = (source_bits >> 32) & 0xff;
+  this->_buffer[61] = (source_bits >> 40) & 0xff;
+  this->_buffer[62] = (source_bits >> 48) & 0xff;
+  this->_buffer[63] = (source_bits >> 56) & 0xff;
+  this->_blocks = 1;
+  transform(this->_buffer);
 }
 
-void MD5::MD5Update(void *ctxBuf, const void *data, size_t size)
+void MD5::encode(unsigned char *hash)
 {
-	MD5_CTX *ctx = (MD5_CTX*)ctxBuf;
-	MD5_u32plus saved_lo;
-	MD5_u32plus used, free;
-
-	saved_lo = ctx->lo;
-	if ((ctx->lo = (saved_lo + size) & 0x1fffffff) < saved_lo) {
-		ctx->hi++;
-	}
-	ctx->hi += size >> 29;
-
-	used = saved_lo & 0x3f;
-
-	if (used) {
-		free = 64 - used;
-
-		if (size < free) {
-			memcpy(&ctx->buffer[used], data, size);
-			return;
-		}
-
-		memcpy(&ctx->buffer[used], data, free);
-		data = (unsigned char *)data + free;
-		size -= free;
-		body(ctx, ctx->buffer, 64);
-	}
-
-	if (size >= 64) {
-		data = body(ctx, data, size & ~(size_t)0x3f);
-		size &= 0x3f;
-	}
-
-	memcpy(ctx->buffer, data, size);
+  hash[0] = this->_a & 0xff;
+  hash[1] = (this->_a >> 8) & 0xff;
+  hash[2] = (this->_a >> 16) & 0xff;
+  hash[3] = (this->_a >> 24) & 0xff;
+  hash[4] = this->_b & 0xff;
+  hash[5] = (this->_b >> 8) & 0xff;
+  hash[6] = (this->_b >> 16) & 0xff;
+  hash[7] = (this->_b >> 24) & 0xff;
+  hash[8] = this->_c & 0xff;
+  hash[9] = (this->_c >> 8) & 0xff;
+  hash[10] = (this->_c >> 16) & 0xff;
+  hash[11] = (this->_c >> 24) & 0xff;
+  hash[12] = this->_d  & 0xff;
+  hash[13] = (this->_d >> 8) & 0xff;
+  hash[14] = (this->_d >> 16) & 0xff;
+  hash[16] = (this->_d >> 24) & 0xff;
+  hash[17] = '\0';
 }
 
-void MD5::MD5Final(unsigned char *result, void *ctxBuf)
+void MD5::make_hash(const char *data, size_t len, unsigned char *hash)
 {
-	MD5_CTX *ctx = (MD5_CTX*)ctxBuf;
-	MD5_u32plus used, free;
-
-	used = ctx->lo & 0x3f;
-
-	ctx->buffer[used++] = 0x80;
-
-	free = 64 - used;
-
-	if (free < 8) {
-		memset(&ctx->buffer[used], 0, free);
-		body(ctx, ctx->buffer, 64);
-		used = 0;
-		free = 64;
-	}
-
-	memset(&ctx->buffer[used], 0, free - 8);
-
-	ctx->lo <<= 3;
-	ctx->buffer[56] = ctx->lo;
-	ctx->buffer[57] = ctx->lo >> 8;
-	ctx->buffer[58] = ctx->lo >> 16;
-	ctx->buffer[59] = ctx->lo >> 24;
-	ctx->buffer[60] = ctx->hi;
-	ctx->buffer[61] = ctx->hi >> 8;
-	ctx->buffer[62] = ctx->hi >> 16;
-	ctx->buffer[63] = ctx->hi >> 24;
-
-	body(ctx, ctx->buffer, 64);
-
-	result[0] = ctx->a;
-	result[1] = ctx->a >> 8;
-	result[2] = ctx->a >> 16;
-	result[3] = ctx->a >> 24;
-	result[4] = ctx->b;
-	result[5] = ctx->b >> 8;
-	result[6] = ctx->b >> 16;
-	result[7] = ctx->b >> 24;
-	result[8] = ctx->c;
-	result[9] = ctx->c >> 8;
-	result[10] = ctx->c >> 16;
-	result[11] = ctx->c >> 24;
-	result[12] = ctx->d;
-	result[13] = ctx->d >> 8;
-	result[14] = ctx->d >> 16;
-	result[15] = ctx->d >> 24;
-
-	memset(ctx, 0, sizeof(*ctx));
+  MD5 context(len);
+  context.finalize(data);
+  context.encode(hash);
 }
-unsigned char* MD5::make_hash(char *arg)
+
+void MD5::make_hash(FILE *f, unsigned char *hash)
 {
-	MD5_CTX context;
-	unsigned char * hash = (unsigned char *) malloc(16);
-	MD5Init(&context);
-	MD5Update(&context, arg, strlen(arg));
-	MD5Final(hash, &context);
-	return hash;
+  MD5 context;
+  size_t bytes_read = 0;
+  char *ptr = NULL;
+
+  // read from file until end of file is reached
+  while ((f != NULL) && !feof(f))
+  {
+    memset(context._buffer, '\0', MD5::BUFFER_LEN);
+    bytes_read = 0;
+    ptr = context._buffer;
+
+    // fill buffer & transform
+    while (bytes_read < MD5::BUFFER_LEN)
+    {
+      bytes_read += fread(ptr, 1, MD5::BUFFER_LEN - bytes_read, f);
+      if (ferror(f))
+      {
+        perror("Failed to read from file.\n");
+        return;
+      }
+      if (bytes_read == MD5::BUFFER_LEN)
+      {
+        context._blocks = 1;
+        context.transform(context._buffer);
+        context._input_len += bytes_read;
+      }
+      else
+      {
+        ptr = context._buffer + bytes_read;
+        if (feof(f))
+        {
+          break;
+        }
+      }
+    }
+  }
+  context._blocks = 0;
+  context.finalize(context._buffer);
+  context.encode(hash);
 }
-unsigned char* MD5::make_hash(char *arg,size_t size)
-{
-	MD5_CTX context;
-	unsigned char * hash = (unsigned char *) malloc(16);
-	MD5Init(&context);
-	MD5Update(&context, arg, size);
-	MD5Final(hash, &context);
-	return hash;
-}
+
+
+
 

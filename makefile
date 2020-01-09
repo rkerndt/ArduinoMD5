@@ -22,8 +22,8 @@
 #
 
 CC := g++ -std=c++11
-#CFLAGS := -O3 -finline-functions -W -Wall
-CFLAGS :=  -W -Wall
+CFLAGS := -O -finline-functions -W -Wall
+#CFLAGS := -g -W -Wall
 
 TARGETS := md5-test
 
