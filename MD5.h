@@ -79,8 +79,7 @@ public:
   /* Utility function to generate a human readable c_string from MD5 hash.
    * hash   - pointer to null terminated char array holding MD5 hash.
    *          Should be a 17 element array.
-   * l1     - length of the hash char array.
-   * digest - pointer to the unsigned char array to store generated hash. Must be at least
+   * digest - pointer to the unsigned char array to store generated hash.  Should be at least
    *          17 char wide.
    */
   static void make_digest(const unsigned char *hash, char *digest);
@@ -107,28 +106,42 @@ private:
    * architectures that lack an AND-NOT instruction, just like in Colin Plumb's
    * implementation.
    * These functions replace the macro definitions used in the original source
-   * Be sure to enable -finline-functions
+   * Be sure to enable -finline-functions.
    */
-  MD5_u32 _F(MD5_u32& cx2, MD5_u32& cx3, MD5_u32& cx4) { return ((cx2 & cx3) | ((~cx2) & cx4)); };
-  MD5_u32 _G(MD5_u32& cx2, MD5_u32& cx3, MD5_u32& cx4) { return ((cx2 & cx4) | (cx3 & (~cx4))); };
-  MD5_u32 _H(MD5_u32& cx2, MD5_u32& cx3, MD5_u32& cx4) { return cx2 ^ cx3 ^ cx4; };
-  MD5_u32 _I(MD5_u32& cx2, MD5_u32& cx3, MD5_u32& cx4) { return cx3 ^ (cx2 | (~cx4)); };
+  MD5_u32 _F(MD5_u32& cx2, MD5_u32& cx3, MD5_u32& cx4) { return (cx4 ^ (cx2 & (cx3 ^ cx4))); }
+  MD5_u32 _G(MD5_u32& cx2, MD5_u32& cx3, MD5_u32& cx4) { return (cx3 ^ (cx4 & (cx2 ^ cx3))); }
+  MD5_u32 _H(MD5_u32& cx2, MD5_u32& cx3, MD5_u32& cx4) { return ((cx2 ^ cx3) ^ cx4); }
+  MD5_u32 _I(MD5_u32& cx2, MD5_u32& cx3, MD5_u32& cx4) { return cx3 ^ (cx2 | (~cx4)); }
 
   /* The MD5 transformation for all four rounds.
    * Variables:
    *   n  - result of a basic MD5 function (cx2, cx3, cx4) , use the above function calls
    *   in the argument list.
-   *   cx1 - reference to the cummulative MD5 context variable a.
-   *   cx2 - reference to the cummulative MD5 context variable b.
+   *   cx1 - reference to the cummulative MD5 context variable.
+   *   cx2 - reference to the cummulative MD5 context variable.
    *   x   - the data element being processed.
    *   sf  - sine function constant
-   *   ac  - MD transform constant */
-  void step(MD5_u32 n, MD5_u32& cx1, MD5_u32& cx2, const char& x, MD5_u32 sf, MD5_u32 s)
+   */
+  void step(MD5_u32 n, MD5_u32& cx1, MD5_u32& cx2, MD5_u32 x, MD5_u32 sf, MD5_u32 s)
   {
-    cx1 += cx2 + ((cx1 + n + x + sf) << s);
+    cx1 += n + x + sf;
+    cx1 = (cx1 << s) | (cx1 >> (32 - s));
+    cx1 += cx2;
+  }
+
+  /* Rearranges the char elements into a lsb u32 for processing by the transform. There are
+   * no overflow checks here, so, be sure to validate the index before calling.
+   */
+  MD5_u32 decode_bigEdian(const char *data, int index)
+  {
+    return ( ( (MD5_u32) data[index<<2] ) | ( ((MD5_u32) data[(index<<2)+1]) << 8 ) | \
+             ( ((MD5_u32) data[(index<<2)+2]) << 16 ) | ( ((MD5_u32) data[(index<<2)+3]) << 24 ) );
+  }
+
+  MD5_u32 decode(const char *data, int index)
+  {
+    return ( *(MD5_u32*) &data[index*4]);
   }
 
 };
-
-
 #endif

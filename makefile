@@ -25,7 +25,7 @@ CC := g++ -std=c++11
 CFLAGS := -O -finline-functions -W -Wall
 #CFLAGS := -g -W -Wall
 
-TARGETS := md5-test
+TARGETS := md5 bsd-md5 mddriver
 
 all: $(TARGETS)
 
@@ -38,8 +38,20 @@ MD5.s: MD5.cpp MD5.h
 main.o: main.cxx MD5.h
 	$(CC) $(CFLAGS) -c main.cxx
 
-md5-test: main.o MD5.o
-	$(CC) $(CFLAGS) -o md5-test main.o MD5.o
+md5: main.o MD5.o
+	$(CC) $(CFLAGS) -o md5 main.o MD5.o
+
+bsd-md5: bsd-md5.c
+	gcc -g -W -Wall -o bsd-md5 bsd-md5.c -L/usr/lib/libbsd.so -lbsd
+
+openwell-md5.o: openwell-md5.c openwell-md5.h
+	gcc $(CFLAGS) -c openwell-md5.c
+
+mddriver.o: mddriver.c openwell-md5.h
+	gcc $(CFLAGS) -c mddriver.c
+
+mddriver: mddriver.o openwell-md5.o
+	gcc $(CFLAGS) -o mddriver mddriver.o openwell-md5.o
 
 clean:
 	@rm -f *.o *.s

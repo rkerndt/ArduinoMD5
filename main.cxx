@@ -50,7 +50,7 @@ void MDFilter(FILE *);
 void MDPrint(const char *);
 
 
-char HELP[] = "\
+static const char HELP[] = "\
 Arguments (may be any combination):\n\
 \t-sstring - digests string\n\
 \t-t        - runs time trial\n\
@@ -119,7 +119,9 @@ int main(int argc, char **argv)
 void MDString(const char *c_string)
 {
   unsigned char hash[MD5::HASH_LEN + 1];
+  memset(hash, '\0', sizeof(hash));
   char digest[MD5::DIGEST_LEN + 1];
+  memset(digest, '\0', sizeof(digest));
   MD5::make_hash(c_string, strlen(c_string), hash);
   MD5::make_digest(hash, digest);
   snprintf(output, OUTPUT_LEN, "MD5 (\"%s\") = %s\n", c_string, digest);
@@ -132,14 +134,15 @@ void MDTimeTrial(void)
   static const int TEST_BLOCK_COUNT = 1000;
   static const int TEST_BLOCK_LEN = 1000;
   struct timespec end_time;
-  struct timespec start_time;
-  char block[TEST_BLOCK_LEN];
-  unsigned char hash[MD5::HASH_LEN + 1];
-  char digest[MD5::DIGEST_LEN + 1];
-
-  // initialize timespec
   memset(&end_time, '\0', sizeof(struct timespec));
+  struct timespec start_time;
   memset(&start_time, '\0', sizeof(struct timespec));
+  char block[TEST_BLOCK_LEN];
+  memset(block, '\0', sizeof(block));
+  unsigned char hash[MD5::HASH_LEN + 1];
+  memset(hash, '\0', sizeof(hash));
+  char digest[MD5::DIGEST_LEN + 1];
+  memset(digest, '\0', sizeof(digest));
 
   snprintf(output, OUTPUT_LEN, "MD5 time trial, Digesting %d %d-byte blocks ...",
     TEST_BLOCK_COUNT, TEST_BLOCK_LEN);
@@ -190,7 +193,7 @@ void MDTimeTrial(void)
 /* Digests a reference suite of strings and prints the results */
 void MDTestSuite(void)
 {
-  MDPrint("MD5 test suite:");
+  MDPrint("MD5 test suite:\n");
   MDString("");
   MDString("a");
   MDString("acb");
@@ -222,7 +225,9 @@ void MDFile(const char *filename)
 void MDFilter(FILE *f)
 {
   unsigned char hash[MD5::HASH_LEN + 1];
+  memset(hash, '\0', sizeof(hash));
   char digest[MD5::DIGEST_LEN + 1];
+  memset(digest, '\0', sizeof(digest));
   MD5::make_hash(f, hash);
   MD5::make_digest(hash, digest);
   snprintf(output, OUTPUT_LEN, "%s\n", digest);
@@ -233,4 +238,13 @@ void MDFilter(FILE *f)
 void MDPrint(const char *c_string)
 {
   printf(c_string);
+}
+
+bool is_big_endian(void)
+{
+  union {
+    uint32_t i;
+    char c[4];
+  } bint = {0x01020304};
+  return bint.c[0] == '\001';
 }
