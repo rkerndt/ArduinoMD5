@@ -12,21 +12,21 @@ time trials.
   mddriver is an implementation of mddriver.c found in rfc1321 and uses
   the md5 code function provided by openwell (openwell-md5.{c,h}).
 
-### Compiling
+## Compiling
 The speed of the MD5 library depends on inlining the core functons:
 _F, _G, _H, _I, step, and decode. I recommend using the compiling
 optimization "-O -inline-functions" to compile MD5.cpp. Do not use the
 size restriction optimization "-Os" as this will not inline the step
 function. Tested with gcc version 9.2.0.
 
-### Usage
+## Usage
 
 The MD5 class has three public static functions for generating the MD5
 hash and digest:
 
-  MD5::make_hash(const char *data, size_t len, unsigned char *hash)
-  MD5::make_hash(FILE *f, unsigned char *hash)
-  MD5::make_digest(const unsigned char *hash, char *digest)
+  * MD5::make_hash(const char *data, size_t len, unsigned char *hash)
+  * MD5::make_hash(FILE *f, unsigned char *hash)
+  * MD5::make_digest(const unsigned char *hash, char *digest)
 
 Both make_hash functions store the computed hash into the unsigned char
 array. Generate a human readable c_string using the make_digest()
