@@ -10,7 +10,7 @@ time trials.
   library.
 
   mddriver is an implementation of mddriver.c found in rfc1321 and uses
-  the md5 code function provided by openwell (openwell-md5.{c,h}).
+  the md5 core functions provided by openwell (openwell-md5.{c,h}).
 
 ## Compiling
 The speed of the MD5 library depends on inlining the core functons:
