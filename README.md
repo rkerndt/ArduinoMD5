@@ -3,14 +3,21 @@ Solar Designer and Scott MacVicar. Macros are replaced by static const variables
 and use of in-line functions with performance equivalent to the c style
 code used in the Solar Designer implementation as well as the bsd md5.
 
-Two other implementations are included and were used for testing and
+Two reference implementations are included and were used for testing and
 time trials.
 
   bsd-md5 uses the md5 functions from the linux bsd compatibility
   library.
 
   mddriver is an implementation of mddriver.c found in rfc1321 and uses
-  the md5 code provided by openwell (openwell.{c,h}).
+  the md5 code function provided by openwell (openwell-md5.{c,h}).
+
+### Compiling
+The speed of the MD5 library depends on inlining the core functons:
+_F, _G, _H, _I, step, and decode. I recommend using the compiling
+optimization "-O -inline-functions" to compile MD5.cpp. Do not use the
+size restriction optimization "-Os" as this will not inline the step
+function. Tested with gcc version 9.2.0.
 
 ### Usage
 
