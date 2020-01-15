@@ -1,26 +1,34 @@
-This is an MD5 library for the Arduino, based on scottmac's MD5 library, which you can find here:
-https://github.com/scottmac/arduino
+A C++ implementation of the MD5 hash (rfc 1321). This was built off work by
+Solar Designer and Scott MacVicar. Macros are replaced by static const variables
+and use of in-line functions with performance equivalent to the c style
+code used in the Solar Designer implementation as well as the bsd md5.
 
-I created this because I was having a really hard time finding an easy-to-install and use libray for the Arduino,
-so I decided to make my own. There is an example on how to use it.
+Two other implementations are included and were used for testing and
+time trials.
 
-### Installation
-Create a folder named _MD5_ in the _libraries_ folder inside your Arduino sketch folder. If the
-libraries folder doesn't exist, create it. Then copy everything inside. (re)launch the Arduino IDE.
+  bsd-md5 uses the md5 functions from the linux bsd compatibility
+  library.
 
-You're done. Time for a mojito
+  mddriver is an implementation of mddriver.c found in rfc1321 and uses
+  the md5 code provided by openwell (openwell.{c,h}).
 
 ### Usage
 
-If you create md5 Hashes in a loop you must give the Memory back to the System 
-```
-unsigned char* hash=MD5::make_hash("hello world");
-//generate the digest (hex encoding) of our hash
-char *md5str = MD5::make_digest(hash, 16);
-//print it on our serial monitor
-Serial.println(md5str);
-//Give the Memory back to the System if you run the md5 Hash generation in a loop
-free(md5str);
-//free dynamically allocated 16 byte hash from make_hash()
-free(hash);
-```
+The MD5 class has three public static functions for generating the MD5
+hash and digest:
+
+  MD5::make_hash(const char *data, size_t len, unsigned char *hash)
+  MD5::make_hash(FILE *f, unsigned char *hash)
+  MD5::make_digest(const unsigned char *hash, char *digest)
+
+Both make_hash functions store the computed hash into the unsigned char
+array. Generate a human readable c_string using the make_digest()
+function.
+
+The core MD5 routines are private to the class with context variables
+zeroized at completion to clean memory of sensitive data. The main.cxx
+(md5 executable) can be used as examples on how to use the MD5 class.
+Please overload the make_hash function to handle different source types
+rather than modifying the core functions directly.
+
+
