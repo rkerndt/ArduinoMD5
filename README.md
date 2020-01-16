@@ -13,6 +13,7 @@ time trials.
   the md5 code function provided by openwell (openwell-md5.{c,h}).
 
 ### Compiling
+
 The speed of the MD5 library depends on inlining the core functons:
 _F, _G, _H, _I, step, and decode. I recommend using the compiling
 optimization "-O -inline-functions" to compile MD5.cpp. Do not use the

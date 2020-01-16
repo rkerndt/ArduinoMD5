@@ -12,6 +12,14 @@ These notices must be retained in any copies of any part of this
 documentation and/or software.
 */
 
+/* Implementation by Rickie Kerndt <kerndtr@kerndt.com.
+ * Updated to c99 with mostly just formatting changes. Uses clock_gettime
+ * for nanosecond resolution in time trial.
+ */
+
+#define _POSIX_C_SOURCE  200112L // gets us struct timespec & clock_gettime()
+
+#
 #include <stdio.h>
 #include <time.h>
 #include <string.h>

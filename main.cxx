@@ -169,7 +169,7 @@ void MDTimeTrial(void)
   long delta = 0;
   if (start_time.tv_sec != end_time.tv_sec)
   {
-    delta = ((end_time.tv_sec - start_time.tv_sec) * 1000000) - start_time.tv_nsec + end_time.tv_nsec;
+    delta = ((end_time.tv_sec - start_time.tv_sec) * 1000000000L) - start_time.tv_nsec + end_time.tv_nsec;
   }
   else
   {

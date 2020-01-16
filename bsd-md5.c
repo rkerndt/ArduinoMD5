@@ -21,6 +21,8 @@
  *
  */
 
+#define _POSIX_C_SOURCE  200112L // gets us struct timespec & clock_gettime()
+
 #include <stdio.h>
 #include <bsd/md5.h>
 #include <string.h>
