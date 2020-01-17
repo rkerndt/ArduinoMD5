@@ -22,12 +22,17 @@
  */
 
 #include "MD5.h"
+#include <stdlib.h>
 
-const unsigned char MD5::_padding[] = {
+const unsigned char MD5::PADDING[] = {
   0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
   };
+
+const char MD5::HEX_BITS[] = {'0', '1', '2', '3', '4', '5', '6', \
+                              '7', '8', '9', 'a', 'b', 'c', 'd', \
+                              'e', 'f'};
 
 MD5::MD5(void)
 {
@@ -60,16 +65,13 @@ void MD5::init(void)
 
 void MD5::make_digest(const unsigned char *hash, char *digest)
 {
-  static const char hex_bits[] = {'0', '1', '2', '3', '4', '5', '6', \
-                                  '7', '8', '9', 'a', 'b', 'c', 'd', \
-                                  'e', 'f'};
   char *p = digest;
   int j = 0;
   for(int i = 0; i < HASH_LEN; i++)
   {
     j = i << 1;
-    digest[j] = hex_bits[(hash[i] >> 4) & 0xf];
-    digest[j+1] = hex_bits[hash[i] & 0xf];
+    digest[j] = HEX_BITS[(hash[i] >> 4) & 0xf];
+    digest[j+1] = HEX_BITS[hash[i] & 0xf];
     p += 2;
   }
 }
@@ -232,7 +234,7 @@ void MD5::finalize(const char *data)
   // case 2 add padding bits to 512, transform, and zero buffer
   if (bytes > SOURCE_SIZE_INDEX)
   {
-    memcpy(this->_buffer + bytes, MD5::_padding, BUFFER_LEN - bytes);
+    memcpy(this->_buffer + bytes, MD5::PADDING, BUFFER_LEN - bytes);
     this->_blocks = 1;
     transform(this->_buffer);
     memset(this->_buffer, '\0', BUFFER_LEN);
@@ -240,7 +242,7 @@ void MD5::finalize(const char *data)
   else
   {
   // add padding bits to 448
-    memcpy(this->_buffer + bytes, MD5::_padding, SOURCE_SIZE_INDEX - bytes);
+    memcpy(this->_buffer + bytes, MD5::PADDING, SOURCE_SIZE_INDEX - bytes);
   }
 
   // append length in bits (64 bit representation low order byte first) and transform
@@ -281,6 +283,13 @@ void MD5::make_hash(const char *data, size_t len, unsigned char *hash)
 {
   MD5 context(len);
   context.finalize(data);
+  context.encode(hash);
+}
+
+void MD5::make_hash(const void *data, size_t len, unsigned char *hash)
+{
+  MD5 context(len);
+  context.finalize( (const char *) data );
   context.encode(hash);
 }
 
@@ -328,7 +337,6 @@ void MD5::make_hash(FILE *f, unsigned char *hash)
   context.finalize(context._buffer);
   context.encode(hash);
 }
-
 
 
 

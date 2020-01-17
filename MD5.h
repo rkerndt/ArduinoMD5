@@ -33,6 +33,7 @@
 //#include "Arduino.h"
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 typedef unsigned int MD5_u32;
 
@@ -45,11 +46,12 @@ public:
   static const int DIGEST_LEN = HASH_LEN << 1;
   static const int BUFFER_LEN = 64;
   static const int SOURCE_SIZE_INDEX = 56;      // buffer location for writing source size
+  static const char HEX_BITS[];                 // hex chars for generating human readable output
 
 private:
 
   // padding
-  static const unsigned char _padding[];
+  static const unsigned char PADDING[];
 
   // chaining variables
   static const MD5_u32 _A = 0x67452301;
@@ -74,6 +76,7 @@ public:
   /* MD5 hash functions
    * These are the entry functions to generate MD5 hashes. */
   static void make_hash(const char *data, size_t len, unsigned char *hash);
+  static void make_hash(const void *data, size_t len, unsigned char *hash);
   static void make_hash(FILE *f, unsigned char *hash);
 
   /* Utility function to generate a human readable c_string from MD5 hash.
@@ -129,18 +132,10 @@ private:
     cx1 += cx2;
   }
 
-  /* Rearranges the char elements into a lsb u32 for processing by the transform. There are
-   * no overflow checks here, so, be sure to validate the index before calling.
-   */
-  MD5_u32 decode_bigEdian(const char *data, int index)
-  {
-    return ( ( (MD5_u32) data[index<<2] ) | ( ((MD5_u32) data[(index<<2)+1]) << 8 ) | \
-             ( ((MD5_u32) data[(index<<2)+2]) << 16 ) | ( ((MD5_u32) data[(index<<2)+3]) << 24 ) );
-  }
-
+  /* Convert four char elements to a 32 bit int. */
   MD5_u32 decode(const char *data, int index)
   {
-    return ( *(MD5_u32*) &data[index*4]);
+    return ( *(MD5_u32*) &data[index << 2]);
   }
 
 };
