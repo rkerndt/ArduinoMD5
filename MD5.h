@@ -1,6 +1,6 @@
 
 /*
- * This is an OpenSSL-compatible implementation of the RSA Data Security,
+ * This is an implementation of the RSA Data Security,
  * Inc. MD5 Message-Digest Algorithm (RFC 1321).
  *
  * Written by Solar Designer <solar at openwall.com> in 2001, and placed
@@ -24,7 +24,8 @@
 /* Updated by Rickie S Kerndt
  * <kerndtr@kerndt.com>
  * Refactored into a more complete object oriented structure, replaced macros
- * with static const variables and inline functions.
+ * with static const variables and inline functions. No longer OpenSSL
+ * compatible.
  */
 
 #ifndef MD5_H
@@ -45,8 +46,8 @@ public:
   static const int HASH_LEN = 16;
   static const int DIGEST_LEN = HASH_LEN << 1;
   static const int BUFFER_LEN = 64;
-  static const int SOURCE_SIZE_INDEX = 56;      // buffer location for writing source size
-  static const char HEX_BITS[];                 // hex chars for generating human readable output
+  static const int SOURCE_SIZE_INDEX = 56; // buffer location for writing source size
+  static const char HEX_BITS[];            // hex chars for generating human readable output
 
 private:
 
@@ -87,9 +88,6 @@ public:
    */
   static void make_digest(const unsigned char *hash, char *digest);
 
-
-private:
-
   /* Initializes MD5 context variables and buffer. */
   void init(void);
 
@@ -103,6 +101,8 @@ private:
   /* Encodes the context variables into an unsigned char array
    * digest - unsigned char pointer to a 17 element array */
   void encode(unsigned char *digest);
+
+private:
 
   /* The basic MD5 functions.
    * F and G are optimized compared to their RFC 1321 definitions for
@@ -135,7 +135,7 @@ private:
   /* Convert four char elements to a 32 bit int. */
   MD5_u32 decode(const char *data, int index)
   {
-    return ( *(MD5_u32*) &data[index << 2]);
+    return ( *(MD5_u32*) (data + (index << 2)));
   }
 
 };

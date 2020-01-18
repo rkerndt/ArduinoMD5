@@ -210,7 +210,7 @@ void MD5::finalize(const char *data)
   size_t bytes = this->_input_len - (this->_bits >> 3);
 
   // Remaining bytes should be less than or equal to BUFFER_LEN if calling
-  // function properly set MD5 context variables _blocks, _bytes, and _input_len.
+  // function properly set MD5 context variables _blocks and _input_len.
   // If we are going to run into an overflow than null out context
   // variables and return leaving a null hash.
   if (bytes > BUFFER_LEN)
@@ -221,7 +221,7 @@ void MD5::finalize(const char *data)
 
 /* There are three remaining cases:
  * 1) transform ended on a block boundry (bytes == 0) -> append 512 bits
- * 2) transform ended between 448-512 bits -> append & transform then append 512 bits
+ * 2) transform ended between 448-512 bits -> append & transform then append to 512 bits.
  * 3) transform ended below or equal to 448 -> append to 448 bits
  */
 

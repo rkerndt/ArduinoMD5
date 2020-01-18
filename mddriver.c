@@ -86,8 +86,7 @@ int main (int argc, char **argv)
 }
 
 /* Digests a string and prints the result. */
-static void MDString (string)
-char *string;
+static void MDString (char *string)
 {
   MD5_CTX context;
   unsigned char digest[16];
