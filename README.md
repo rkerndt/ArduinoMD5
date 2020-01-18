@@ -17,9 +17,7 @@ time trials.
 
 The speed of the MD5 library depends on inlining the core functons:
 _F, _G, _H, _I, step, and decode. I recommend using the compiling
-optimization "-O -inline-functions" to compile MD5.cpp. Do not use the
-size restriction optimization "-Os" as this will not inline the step
-function. Tested with gcc version 9.2.0.
+optimization "-O -inline-functions" to compile MD5.cpp. Tested with gcc version 9.2.0.
 
 ## Usage
 
