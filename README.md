@@ -27,6 +27,7 @@ The MD5 class has three public static functions for generating the MD5
 hash and digest:
 
   * MD5::make_hash(const char *data, size_t len, unsigned char *hash)
+  * MD5::make_hash(const void *data, size_t len, unsigned char *hash)
   * MD5::make_hash(FILE *f, unsigned char *hash)
   * MD5::make_digest(const unsigned char *hash, char *digest)
 
