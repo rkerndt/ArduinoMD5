@@ -211,7 +211,7 @@ void MD5::finalize(const char *data)
 
   // Remaining bytes should be less than or equal to BUFFER_LEN if calling
   // function properly set MD5 context variables _blocks and _input_len.
-  // If we are going to run into an overflow than null out context
+  // If we are going to run into an overflow then null out context
   // variables and return leaving a null hash.
   if (bytes > BUFFER_LEN)
   {
@@ -234,7 +234,7 @@ void MD5::finalize(const char *data)
   // case 2 add padding bits to 512, transform, and zero buffer
   if (bytes > SOURCE_SIZE_INDEX)
   {
-    memcpy(this->_buffer + bytes, MD5::PADDING, BUFFER_LEN - bytes);
+    memcpy(this->_buffer + bytes, PADDING, BUFFER_LEN - bytes);
     this->_blocks = 1;
     transform(this->_buffer);
     memset(this->_buffer, '\0', BUFFER_LEN);
@@ -242,7 +242,7 @@ void MD5::finalize(const char *data)
   else
   {
   // add padding bits to 448
-    memcpy(this->_buffer + bytes, MD5::PADDING, SOURCE_SIZE_INDEX - bytes);
+    memcpy(this->_buffer + bytes, PADDING, SOURCE_SIZE_INDEX - bytes);
   }
 
   // append length in bits (64 bit representation low order byte first) and transform
@@ -307,7 +307,7 @@ void MD5::make_hash(FILE *f, unsigned char *hash)
     ptr = context._buffer;
 
     // fill buffer & transform
-    while (bytes_read < MD5::BUFFER_LEN)
+    while ((bytes_read < MD5::BUFFER_LEN) && !feof(f))
     {
       bytes_read += fread(ptr, 1, MD5::BUFFER_LEN - bytes_read, f);
       if (ferror(f))
@@ -316,22 +316,14 @@ void MD5::make_hash(FILE *f, unsigned char *hash)
         context.init();
         return;
       }
-      if (bytes_read == MD5::BUFFER_LEN)
-      {
-        context._blocks = 1;
-        context.transform(context._buffer);
-        context._input_len += bytes_read;
-      }
-      else
-      {
-        ptr = context._buffer + bytes_read;
-        context._input_len += bytes_read;
-        if (feof(f))
-        {
-          break;
-        }
-      }
-    }
+      ptr = context._buffer + bytes_read;
+      context._input_len += bytes_read;
+   }
+   if (bytes_read == MD5::BUFFER_LEN)
+   {
+     context._blocks = 1;
+     context.transform(context._buffer);
+   }
   }
   context._blocks = 0;
   context.finalize(context._buffer);

@@ -24,7 +24,7 @@
 C++ := g++ -std=c++11
 CC  := gcc -std=c99
 
-CFLAGS := -O -finline-functions -W -Wall
+CFLAGS := -Os -finline-functions -W -Wall
 #CFLAGS := -g -W -Wall
 
 TARGETS := md5 bsd-md5 mddriver

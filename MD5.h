@@ -99,8 +99,8 @@ public:
   void finalize(const char *data);
 
   /* Encodes the context variables into an unsigned char array
-   * digest - unsigned char pointer to a 17 element array */
-  void encode(unsigned char *digest);
+   * hash - unsigned char pointer to a 17 element array */
+  void encode(unsigned char *hash);
 
 private:
 
