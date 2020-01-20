@@ -22,7 +22,7 @@
  */
 
 #include "MD5.h"
-#include <stdlib.h>
+
 
 const unsigned char MD5::PADDING[] = {
   0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -329,6 +329,8 @@ void MD5::make_hash(FILE *f, unsigned char *hash)
   context.finalize(context._buffer);
   context.encode(hash);
 }
+
+
 
 
 

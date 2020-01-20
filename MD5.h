@@ -32,9 +32,12 @@
 #define MD5_H
 
 //#include "Arduino.h"
-#include <string.h>
+#include <cstring>
+#include <string>
 #include <stdio.h>
 #include <ctype.h>
+
+using namespace std;
 
 typedef unsigned int MD5_u32;
 
@@ -78,6 +81,7 @@ public:
    * These are the entry functions to generate MD5 hashes. */
   static void make_hash(const char *data, size_t len, unsigned char *hash);
   static void make_hash(const void *data, size_t len, unsigned char *hash);
+  static void make_hash(const string &data, unsigned char *hash);
   static void make_hash(FILE *f, unsigned char *hash);
 
   /* Utility function to generate a human readable c_string from MD5 hash.
@@ -87,6 +91,10 @@ public:
    *          17 char wide.
    */
   static void make_digest(const unsigned char *hash, char *digest);
+
+  /* Utility function to compare two hashes for equality. Takes pointer
+   * to a 17 element unsigned char array. */
+  bool comp_hash(const unsigned char *hash_1, const unsigned char *hash_2);
 
   /* Initializes MD5 context variables and buffer. */
   void init(void);
