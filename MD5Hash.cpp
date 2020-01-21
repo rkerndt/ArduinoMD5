@@ -60,6 +60,7 @@ MD5Hash::~MD5Hash(void)
   memset(this->hash, '\0', MD5::HASH_LEN + 1);
   if (this->c_string != NULL)
   {
+    memset(this->c_string, '\0', MD5::DIGEST_LEN + 1);
     free(this->c_string);
   }
 }
