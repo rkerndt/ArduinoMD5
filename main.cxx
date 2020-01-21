@@ -201,6 +201,43 @@ void MDTestSuite(void)
   MDString("abcdefghijklmnopqrstuvwxyz");
   MDString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
   MDString("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+
+  char str1[] = "message digest";
+  char str2[] = "message digesu";
+  char str3[] = "";
+  unsigned char hash1[MD5::HASH_LEN + 1];
+  memset(hash1, '\0', sizeof(hash1));
+  char digest1[MD5::DIGEST_LEN + 1];
+  memset(digest1, '\0', sizeof(digest1));
+  unsigned char hash2[MD5::HASH_LEN + 1];
+  memset(hash2, '\0', sizeof(hash2));
+  char digest2[MD5::DIGEST_LEN + 1];
+  memset(digest2, '\0', sizeof(digest2));
+  unsigned char hash3[MD5::HASH_LEN + 1];
+  memset(hash3, '\0', sizeof(hash3));
+  char digest3[MD5::DIGEST_LEN + 1];
+  memset(digest3, '\0', sizeof(digest3));
+
+  MD5::make_hash(str1, strlen(str1), hash1);
+  MD5::make_digest(hash1, digest1);
+  MD5::make_hash(str2, strlen(str2), hash2);
+  MD5::make_digest(hash2, digest2);
+  MD5::make_hash(str3, strlen(str3), hash3);
+  MD5::make_digest(hash3, digest3);
+
+  snprintf(output, OUTPUT_LEN, "hash1 (\"%s\") = %s\n", str1, digest1);
+  MDPrint(output);
+  snprintf(output, OUTPUT_LEN, "hash2 (\"%s\") = %s\n", str2, digest2);
+  MDPrint(output);
+  snprintf(output, OUTPUT_LEN, "hash3 (\"%s\") = %s\n", str3, digest3);
+  MDPrint(output);
+
+  snprintf(output, OUTPUT_LEN, "hash1 == hash1 := %d\n", MD5::comp_hash(hash1, hash1));
+  MDPrint(output);
+  snprintf(output, OUTPUT_LEN, "hash1 == hash2 := %d\n", MD5::comp_hash(hash1, hash2));
+  MDPrint(output);
+  snprintf(output, OUTPUT_LEN, "hash3 == hash1 := %d\n", MD5::comp_hash(hash3, hash1));
+  MDPrint(output);
 }
 
 /* Digests a file and prints the result */

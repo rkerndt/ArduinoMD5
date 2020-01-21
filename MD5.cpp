@@ -76,6 +76,20 @@ void MD5::make_digest(const unsigned char *hash, char *digest)
   }
 }
 
+bool MD5::comp_hash(const unsigned char *hash_1, const unsigned char *hash_2)
+{
+  bool result = true;
+  for (int i = 0; i < HASH_LEN; i++)
+  {
+    if (hash_1[i] != hash_2[i])
+    {
+      result = false;
+      break;
+    }
+  }
+  return result;
+}
+
 /* Processes 64 byte blocks for the MD5 transforms.
  * Set the MD5 class member _blocks to the number of full blocks */
 const char * MD5::transform(const char *data)

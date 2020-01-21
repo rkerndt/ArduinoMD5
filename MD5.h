@@ -94,7 +94,7 @@ public:
 
   /* Utility function to compare two hashes for equality. Takes pointer
    * to a 17 element unsigned char array. */
-  bool comp_hash(const unsigned char *hash_1, const unsigned char *hash_2);
+  static bool comp_hash(const unsigned char *hash_1, const unsigned char *hash_2);
 
   /* Initializes MD5 context variables and buffer. */
   void init(void);
