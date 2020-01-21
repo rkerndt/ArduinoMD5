@@ -293,6 +293,13 @@ void MD5::make_hash(const void *data, size_t len, unsigned char *hash)
   context.encode(hash);
 }
 
+void MD5::make_hash(const string &data, unsigned char *hash)
+{
+  MD5 context(data.length());
+  context.finalize( data.c_str());
+  context.encode(hash);
+}
+
 void MD5::make_hash(FILE *f, unsigned char *hash)
 {
   MD5 context;
