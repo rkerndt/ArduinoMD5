@@ -49,7 +49,7 @@ public:
   string to_string(void);
   char *c_str(void);
 
-  /* MD5 hash funtions generating MD5Hash objects */
+  /* MD5 hash functions generating MD5Hash objects */
   static MD5Hash make_MD5Hash(const char *data, size_t len);
   static MD5Hash make_MD5Hash(const void *data, size_t len);
   static MD5Hash make_MD5Hash(const string &data);
