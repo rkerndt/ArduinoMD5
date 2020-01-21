@@ -199,7 +199,7 @@ void MDTestSuite(void)
 
   MD5Hash hash1 = MD5Hash::make_MD5Hash(str1, strlen(str1));
   MD5Hash hash2 = MD5Hash::make_MD5Hash(str2, strlen(str2));
-  MD5Hash hash3 = MD5Hash::make_MD5Hash(str3, strlen(str2));
+  MD5Hash hash3 = MD5Hash::make_MD5Hash(str3, strlen(str3));
 
   MD5Hash hash4(hash1);  // copy constructor
   MD5Hash hash5 = hash1; // copy assignment
