@@ -3,7 +3,7 @@ Solar Designer and Scott MacVicar. Macros are replaced by static const variables
 and use of in-line functions with performance equivalent to the c style
 code used in the Solar Designer implementation as well as the bsd md5.
 
-####Class MD5 : MD5.{h,c}
+#### Class MD5 : MD5.{h,c}
 
 Class MD5 is the rfc1321 MD5 alrorithm. There are five public static
 functions that server as the entry point for generating MD5 hashes.
@@ -21,7 +21,7 @@ source type, then either do the conversion in the calling function or
 extend the class by overloading the make_hash() function to handle the
 required source type.
 
-####Class MD5Hash : MD5Hash.{h,c}
+#### Class MD5Hash : MD5Hash.{h,c}
 
 Class MD5Hash provides a container for the hash with functions for
 comparing hashes and generating the human readable form. MD5Hash provides
