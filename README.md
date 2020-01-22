@@ -33,10 +33,7 @@ object.
   * static MD5Hash make_MD5Hash(const string &data);
   * static MD5Hash make_MD5Hash(FILE *f);
 
-
-
-####Two reference implementations are included and were used for testing
-and time trials:
+#### Reference implementations:
 
   * bsd-md5 uses the md5 functions from the linux bsd compatibility
   library.
