@@ -37,10 +37,7 @@ MD5Hash::MD5Hash(const MD5Hash &obj)
   }
   if (obj.c_string != NULL)
   {
-    for(int i = 0; i < MD5::DIGEST_LEN; i++)
-    {
-      this->c_string[i] = obj.c_string[i];
-    }
+    this->c_str();
   }
 }
 
@@ -75,10 +72,7 @@ MD5Hash& MD5Hash::operator=(const MD5Hash &rhs)
     }
     if (rhs.c_string != NULL)
     {
-      for(int i = 0; i < MD5::DIGEST_LEN; i++)
-      {
-        this->c_string[i] = rhs.c_string[i];
-      }
+      this->c_str();
     }
   }
   return *this;
