@@ -26,7 +26,7 @@
 using namespace std;
 
 /* Container to store and operate on a MD5 hash. Uses class MD5 to
- * compute hash values and provides operator overload functions for
+ * compute hash values, and provides operator overload functions for
  * comparision and to generate human readable form */
 class MD5Hash {
 
