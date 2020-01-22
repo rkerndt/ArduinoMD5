@@ -28,10 +28,10 @@ comparing hashes and generating the human readable form. MD5Hash provides
 wrappers for the MD5 class make_hash functions that return a MD5Hash
 object.
 
-  * static MD5Hash make_MD5Hash(const char *data, size_t len);
-  * static MD5Hash make_MD5Hash(const void *data, size_t len);
-  * static MD5Hash make_MD5Hash(const string &data);
-  * static MD5Hash make_MD5Hash(FILE *f);
+  * MD5Hash make_MD5Hash(const char *data, size_t len);
+  * MD5Hash make_MD5Hash(const void *data, size_t len);
+  * MD5Hash make_MD5Hash(const string &data);
+  * MD5Hash make_MD5Hash(FILE *f);
 
 #### Reference implementations:
 
